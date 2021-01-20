@@ -1,0 +1,368 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct bank{
+	char nome[50];
+	int Cpf;
+	float Cash;
+}business;
+
+void client_register(business *client);
+void Print_data(business *client);
+void Search_data(int busca_cpf, business *client, int num);
+void sake(int busca_cpf, business *client, int num, int saque, int senha);
+int Valid_password(int senha);
+int Transference_realization(business *client, float transferencia, int busca_cpf, int num);
+void Search_cpf(business *client, int cpf, int num, float transferencia);
+void Search_balance(int busca_cpf, business *client, int num);
+void Realization_deposit(int busca_cpf, business *client, int num, float deposito);
+void bill_payment(int busca_cpf, business *client, int num, int conta, float valor_conta);
+
+int main(){
+	int num, i, busca_cpf, senha, a, operacao, cpf, b, conta;
+	float saque, transferencia, deposito, valor_conta;
+	business *client;
+
+	printf("*********************** JPSM BANK ***********************\n");
+	printf("*********************************************************\n");
+	printf("PARA REALIZAR AS DEMAIS OPERACOES PRIMEIRO\n");
+	printf("VOCE TEM QUE DIGITAR QUANTOS CLIENTE TEM O BANCO.\n\n");
+	printf("CADASTRO DE CLIENTE:\n");
+	printf("DIGITE QUANTOS USUARIOS DESEJA CADASTRA NO BANCO...\n");
+	printf("->> ");
+	scanf("%d", &num);
+	client = (business*) malloc(num*sizeof(business));
+	if(client == NULL)
+		exit(0);
+	else
+	{
+		for(i=0;i<num;i++)
+		{
+			printf("****************** Cliente: %d ******************\n", i+1);
+			client_register(&client[i]);
+		}
+	}
+	printf("\n");
+	printf(">>>>>>>>>>>>>>>>>>>>>>>>>>SEJA BEM VINDO<<<<<<<<<<<<<<<<<<<<<<<<<\n");
+	printf("        AGORA DIGITE QUAL OPERACAO VOCE DESEJA REALIZAR:\n");
+	printf("*****************************************************************\n");
+	printf("PARA REALIZAR UM SAQUE DIGITE: 1\n");
+	printf("PARA REALIZAR UMA TRANSFERENCIA DIGITE: 2\n");
+	printf("PARA MOSTRA NA TELA QUANTOS CLIENTES TEM O BANCO DIGITE: 3\n");
+	printf("PARA REALIZAR UMA BUSCA DE UM CLIENTE DIGITE: 4\n");
+	printf("PARA VER SEU SALDO DIGITE: 5\n");                                                           
+	printf("PARA DEPOSITO DIGITE: 6\n");
+	printf("PARA REALIZAR PAGAMENTO DE UMA CONTA DIGITE: 7\n");
+	printf("PARA ENCERRAR O SERVICO DIGITE: 0\n");
+	printf("->> ");
+	scanf("%d", &operacao);// essa variavel vai definir qual operaçao o cliente deseja realizar...
+	while(operacao!=0)
+	{		
+		switch(operacao)
+		{
+			case 7:// pagamento de uma conta.
+				printf("Digite seu Cpf para entra em sua conta:\n");
+				printf("CPF: ");
+				scanf("%d", &busca_cpf);
+				Search_data(busca_cpf, client, num);//examina se o cliente existe no banco de dados 
+				printf("Digite o codigo da conta:\n");
+				printf("Codigo: ");
+				scanf("%d", &conta);
+				printf("Valor de Conta:\n");
+				printf("R$:");
+				scanf("%f", &valor_conta);
+				bill_payment(busca_cpf, client, num, conta, valor_conta);//realiza o pagamneto da conta
+
+			break;
+
+			case 6:
+				printf("Digite o CPF da conta a qual deseja realizar o deposito\n");
+				printf("CPF: ");
+				scanf("%d", &busca_cpf);
+				printf("Valor do deposito:\n");
+				printf("R$: ");
+				scanf("%f", &deposito);
+				Realization_deposit(busca_cpf,client,num, deposito);//essa funçao Realization_deposit passa com parametros cpf, estrutura client, quantos usuarios tem o banco
+				// e o valor do deposito...
+			break;
+			case 5:
+				printf("DIGITE O CPF DA PESSOA: ");
+				scanf("%d", &busca_cpf);
+				Search_balance(busca_cpf, client, num);//essa funçao é para o saldo do cliente e sao passados com parametros(cpf, estrutura client, numeros de cliente do banco).
+			break;
+
+			case 4:
+				printf("---------> BUSCA DE CLIENTE <---------\n");// realiza a busca de um cliente no banco de dados...
+				printf("Digite o cpf do cliente a ser buscado(a) no banco de dados:\n");
+				printf("CPF: ");
+				scanf(" %d", &busca_cpf);
+				printf("\n");
+				Search_data(busca_cpf, client, num);
+			break;
+
+			case 3:
+				for(i=0;i<num;i++)//mostra quantos cliente tem o banco e seus dados
+				{
+					printf("****************** Cliente: %d ******************\n", i+1);
+					Print_data(&client[i]);
+				}
+			break;
+
+			case 2://transferencia...
+			if(num>=2)
+			{
+				printf("DIGITE SEU CPF:\n");
+				scanf("%d", &busca_cpf);
+				printf("Valor da transferencia:\n");
+				scanf("%f", &transferencia);
+				b = Transference_realization(client, transferencia, busca_cpf, num);//para essa funçao sao passado como parametros(estrutura client, o valor da tranferencia, cpf da pessoa, numero de clientes do banco).
+				// e ela tambem verifica se o valor da transferencia é aceito pois o cliente nao pode realizar uma transferencia maior que seu saldo.
+				while(b!=1)
+				{
+					scanf("%f", &transferencia);
+					b = Transference_realization(client, transferencia, busca_cpf, num);
+				}
+				printf("Para quem voce deseja transferir esse valor...\n");
+				printf("Digite o cpf dessa pessoa\n");
+				scanf("%d", &cpf);
+				Search_cpf(client, cpf, num, transferencia);//pesquisa no banco de dados se o cliente para quem voce deseja realizar a transferencia existe...
+			}
+
+			break;
+
+			case 1://este caso realiza o saque
+				printf("PRIMEIRO DIGITE SEU CPF:\n");
+				printf("CPF: ");
+				scanf("%d", &busca_cpf);// cpf da conta a qual deseja realizar o saque
+				printf("Valor do saque: ");
+				printf("R$: ");
+				scanf("%f", &saque);//valor do saque
+				printf("Digite sua senha:\n");
+				scanf("%d", &senha);
+				a = Valid_password(senha);// verifica e a senha esta correta
+				while(a!=1)
+				{
+					printf("senha incorreta...\n");
+					printf("por favor digite novamente: \n");
+					scanf("%d", &senha);
+					a = Valid_password(senha);
+				}
+				sake(busca_cpf, client, num, saque, senha);// agora realiza o saque parametros passado para a funçao (cpf do cliente, numeros de clientes no banco, o valor do que saque que nao pode ser maior queo valor na conta,
+				// e senha do cliente).
+			break;			
+		}
+		printf("DIGITE OUTRA OPERACAO A SER REALIZADA:\n");
+		printf("SAQUE -> 1\n");
+		printf("TRANSFERENCIA -> 2\n");
+		printf("QNT CLIENTES NO BANCO -> 3\n");
+		printf("BUSCAR CLIENTE -> 4\n");
+		printf("VER SALDO -> 5\n");
+		printf("REALIZAR DEPOSITO -> 6\n");
+		printf("PAGAMENTO DE CONTAS -> 7\n");
+		printf("ENCERRAR SERVICO -> 0\n");
+		printf("->> ");
+		scanf("%d", &operacao);
+	}
+	if(operacao==0)
+	{
+		printf("OK!!!\n");
+		printf("SERVICO ENCERRADO\n");
+		printf("OBRIGADO(A) E VOLTE SEMPRE...\n");
+	}
+	free(client);
+
+	return 0;
+}
+
+void client_register(business *client){// registra dados do cliente no banco de dados
+
+	printf("Digite o nome do cliente:\n");
+	printf("NOME: ");
+	scanf(" %[^\n]", client->nome);
+	printf("Digite o cpf do cliente:\n");
+	printf("CPF: ");
+	scanf(" %d", &client->Cpf);
+	printf("Digite o saldo do cliente:\n");
+	printf("SALDO: ");
+	scanf(" %f", &client->Cash);
+	printf("\n");
+}
+
+void Search_data(int busca_cpf, business *client, int num){
+	
+	int i, cnt=0;
+	for(i=0;i<num;i++)
+	{
+		if(busca_cpf == client[i].Cpf)
+		{
+			printf("*** Cliente encontrado pelo banco de Dados ***");
+			printf("\n\n");
+			printf("Nome do Cliente: %s\n", client[i].nome);
+			printf("CPF do Cliente: %d\n", client[i].Cpf);
+			printf("Saldo do Cliente na conta: R$%.2f\n", client[i].Cash);
+			cnt=1;
+		}
+	}
+	if(!cnt)
+	{
+		printf("Nas busca realizadas no banco de dados nao\n");
+		printf("encontramos nenhum Cliente com esse Cpf\n");
+	}
+	printf("\n\n");
+}
+
+void Print_data(business *client){
+		
+		printf("Nome do Cliente: ");
+		printf("%s\n", client->nome);
+		printf("CPF do Cliente: ");
+		printf("%d\n", client->Cpf);
+		printf("Saldo do Cliente na conta: ");
+		printf("R$%.2f\n", client->Cash);
+		printf("\n");
+}
+
+void sake(int busca_cpf, business *client, int num, int saque, int senha){
+	
+	int i, cnt=0;
+	for(i=0;i<num;i++)
+	{
+		if(busca_cpf == client[i].Cpf)
+		{
+			printf("Nome do Cliente: %s\n", client[i].nome);
+			printf("CPF do Cliente: %d\n", client[i].Cpf);
+			printf("Valor na Conta: ");
+			printf("R$%.2f\n", client[i].Cash);
+			if(saque > client[i].Cash)
+			{
+				printf("Desculpe mais o valor a ser sacado eh maior\n");
+				printf("do que o valor na conta...\n");
+			}
+			else
+			{
+				printf("Valor na conta apos o saque:\n");
+				client[i].Cash-=saque;
+				printf("R$%.2f\n", client[i].Cash);
+			}		
+		}
+	}
+	printf("\n\n");
+}
+int Valid_password(int senha){
+	
+	int senha1 = 1234, cnt=0;
+	if(senha==senha1)
+	{
+		cnt=1;
+	}
+	return cnt;
+}
+
+void Search_cpf(business *client, int cpf, int num, float transferencia){
+	
+	int i, cnt=0;
+	for(i=0;i<num;i++)
+	{
+		if(cpf==client[i].Cpf)
+		{
+			printf("Cliente encontrado agora voce pode realizar a transferencia\n");
+			printf("Nome: %s\n", client[i].nome);
+			client[i].Cash+=transferencia;
+			cnt = 1;
+		}
+	}
+	if(!cnt)
+	{
+		printf("Ops client nao encontrado...\n");
+	}
+	printf("\n\n");
+}
+
+int Transference_realization(business *client, float transferencia, int busca_cpf, int num){
+	
+	int i, aux = 0;
+
+	for(i=0;i<num;i++)
+	{
+		if(busca_cpf==client[i].Cpf)
+		{
+			if(transferencia<=client[i].Cash)
+			{
+				client[i].Cash -= transferencia;
+				aux = 1;
+			}
+		}
+	}
+	if(!aux)
+	{
+		printf("Ops..\nValor da transferencia eh maior que seu saldo\n");
+	}
+	return aux;
+}
+
+void Search_balance(int busca_cpf, business *client, int num){
+	
+	int i, cnt=0;
+	for(i=0;i<num;i++)
+	{
+		if(busca_cpf == client[i].Cpf)
+		{
+			printf("Nome do Cliente: %s\n", client[i].nome);
+			printf("Saldo do Cliente na conta: R$%.2f\n", client[i].Cash);
+			cnt=1;
+		}
+	}
+	if(!cnt)
+	{
+		printf("Nas busca realizadas no banco de dados nao\n");
+		printf("encontramos nenhum Cliente com esse Cpf\n");
+	}
+	printf("\n\n");
+}
+
+void Realization_deposit(int busca_cpf, business *client, int num, float deposito){
+	
+	int i, cnt=0;
+	for(i=0;i<num;i++)
+	{
+		if(busca_cpf == client[i].Cpf)
+		{
+			printf("Nome do Cliente: %s\n", client[i].nome);
+			printf("Saldo do Cliente na conta: R$%.2f\n", client[i].Cash);
+			client[i].Cash+=deposito;
+			printf("Saldo apos o deposito: R$%2.f\n", client[i].Cash);
+			cnt=1;
+		}
+	}
+	if(!cnt)
+	{
+		printf("Nas busca realizadas no banco de dados nao\n");
+		printf("encontramos nenhum Cliente com esse Cpf\n");
+	}
+	printf("\n\n");
+}
+void bill_payment(int busca_cpf, business *client, int num, int conta, float valor_conta)
+{
+	int i, cnt=0;
+	for(i=0;i<num;i++)
+	{
+		if(busca_cpf == client[i].Cpf)
+		{
+			if(valor_conta<=client[i].Cash)
+			{
+				printf("Codigo de barra da conta\n");
+				printf("**** %d ****\n", conta);
+				client[i].Cash-=valor_conta;
+				printf("Valor da conta:\n");
+				printf("R$:%2.f\n", valor_conta);
+				cnt = 1;
+			}
+			
+		}
+	}
+	if(!cnt)
+	{
+		printf("operacao nao realizada pois o valor da conta eh maior que seu saldo...\n");
+	}
+}
