@@ -1,0 +1,231 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct No *ArvBin;
+struct No{
+	int num;
+	struct No *esquerda;
+	struct No *direita;
+}
+
+ArvBin *criar_arv(void);
+void liberar_Arv(ArvBin *raiz);
+void liberar_NO(struct No *no);
+int esta_Vazia(ArvBin *raiz);
+int altura_ArvBin(ArvBin *raiz);
+int total_NO(ArvBin *raiz);
+void Pos_Ordem(ArvBin *raiz);
+void Pre_Ordem(ArvBin *raiz);
+void In_Ordem(ArvBin *raiz);
+int inserir_Arv(ArvBin *raiz, int num);
+
+int main(int argc, char const *argv[])
+{
+	/*int x, y;
+	x = esta_Vazia(raiz);
+	y = altura_ArvBin(raiz);
+	z = total_NO(raiz);
+	w = inserir_Arv(raiz, valor);
+	*/
+	return 0;
+}
+ArvBin* criar_arv(void)
+{
+	ArvBin* raiz = (ArvBin*) malloc(sizeof(ArvBin));
+	if(raiz != NULL)
+	{
+		*raiz = NULL;
+		return raiz;
+	}
+}
+void liberar_NO(struct No *no)
+{
+	if(no == NULL)
+	{
+		return;
+	}
+	liberar_NO(no->esquerda);
+	liberar_NO(no->direita);
+	no = NULL;
+}
+void liberar_Arv(ArvBin *raiz)
+{
+	if(raiz == NULL)
+	{
+		return;
+	}
+	liberar_Arv(*raiz);
+	free(raiz);
+}
+
+int esta_Vazia(ArvBin *raiz)
+{
+	if(raiz == NULL)
+		return 1;
+	if(*raiz == NULL)
+		return 1;
+	return 0;
+}
+int altura_ArvBin(ArvBin *raiz)
+{
+	if(raiz == NULL)
+		return 0;
+	if(*raiz == NULL)
+		return 0;
+	int altura_esq = altura_ArvBin(&((*raiz)->esquerda));
+	int altura_dir = altura_ArvBin(&((*raiz)->direita));
+
+	if(altura_esq > altura_dir)
+		return (altura_esq + 1);
+	else 
+		return (altura_dir + 1);
+}
+int total_NO(ArvBin *raiz)
+{
+	if(raiz == NULL)
+		return 0;
+	if(*raiz != NULL)
+		return 0;
+	int altura_esq = total_NO(&((*raiz)->esquerda));
+	int altura_dir = total_NO(&((*raiz)->direita));
+		return (altura_dir + altura_esq + 1);
+}
+void Pre_Ordem(ArvBin *raiz)
+{
+	if(raiz == NULL)
+		return;
+	printf(" %d", (*raiz)->num);
+	Pre_Ordem(&((*raiz)->esquerda));
+	Pre_Ordem(&((*raiz)->direita));
+}
+void In_Ordem(ArvBin *raiz)
+{
+	if(raiz == NULL)
+		return;
+	In_Ordem(&((*raiz)->esquerda));
+	printf(" %d", (*raiz)->num);
+	In_Ordem(&((*raiz)->direita));
+}
+
+void Pos_Ordem(ArvBin *raiz)
+{
+	if(raiz == NULL)
+		return;
+	Pos_Ordem(&((*raiz)->esquerda));
+	Pos_Ordem(&((*raiz)->direita));
+	printf(" %d", (*raiz)->num);
+}
+
+int inserir_Arv(ArvBin *raiz, int num)
+{
+	if(raiz == NULL)
+		return 0;
+	struct No *novo;
+	novo = (struct No*) malloc(sizeof(struct No));
+	if(novo == NULL)
+		return 0;
+	novo->num = valor;
+	novo->direita = NULL;
+	novo->esquerda = NULL;
+	if(*raiz == NULL)
+		*raiz = novo;
+	else
+	{
+		struct No *atual = *raiz;
+		struct No *ant = NULL;
+		while(atual != NULL)
+		{
+			ant = atual;
+			if(valor == atual->num)
+			{
+				free(novo);
+				return 0;//ele ja existe.
+			}
+			if(valor > atual->num)
+			{
+				atual = atual->direita;
+			}
+			else 
+				atual = atual->esquerda;
+		}
+		if(valor > ant->num)
+			ant->direita = novo;
+		else
+			ant->esquerda = novo;
+	}
+	return 1;
+}
+int remover_Arv(ArvBin *raiz, int valor)
+{
+	if(raiz == NULL)
+		return 0;
+	struct No *ant = NULL;
+	struct No *atual = *raiz;
+	while(atual != NULL)
+	{
+		if(valor == atual->num)
+		{
+			if(atual == *raiz)
+			{
+				*raiz = remover_Arv(atual);
+			}
+			else
+			{
+				if(ant->direita == atual)
+					ant->direita = remover_Arv(atual);
+				else
+					ant->esquerda = remover_Arv(atual);
+			}
+			return 1;
+		}
+		ant = atual;
+		if(valor > atual->num)
+			atual = atual->direita;
+		else
+			atual = atual->esquerda;
+	}
+}
+struct No *remover_Arv_atual(struct No *atual)
+{
+	struct No *no1, *no2;
+	if(atual->esquerda == NULL)//para remover no da direita
+	{
+		no2 = atual->direita;
+		free(atual);
+		return no2;
+	}
+	no1 = atual;
+	no2 = atual->esquerda;
+	while(no2->direita != NULL)//procura o no mais a direita
+	{
+		no1 = no2;
+		no2 = no2->direita;
+	}
+
+	if(no1 != atual)//copia fiilho maos a direita na sub_arv esquerda para o lugar no do a ser removido
+	{
+		no1->direita = no2->esquerda;
+		no2->esquerda = atual->esquerda;
+	}
+
+	no2->direita = atual->direita;
+	free(atual);
+	return no2;
+}
+
+int consulta_Arv(ArvBin *raiz, int valor)
+{
+	if(raiz == NULL)
+		return 0;
+	struct No *atual = *raiz;
+	while(atual != NULL)
+	{
+		if(valor == atual->num)
+			return 1;
+		if(valor > atual->num)
+			atual = atual->direita;
+		else
+			atual = atual->esquerda;
+	}
+	return 0;
+}
